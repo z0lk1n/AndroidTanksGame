@@ -76,6 +76,10 @@ public class GameScreen implements Screen {
 
     private boolean gameOver;
     private boolean paused;
+    //Что бы из класса танк, знать о завершении игры.
+    public boolean isGameOver() {
+        return gameOver;
+    }
 
     public void checkNextTurn() {
         if (players.size() == 1) {
@@ -260,6 +264,7 @@ public class GameScreen implements Screen {
     Vector2 v2tmp = new Vector2(0, 0);
 
     public void update(float dt) {
+        //Если конец игры, то запускаем фейрверк.
         if (!gameOver && !paused) {
             playerJoystick.setVisible(getCurrentTank() instanceof PlayerTank);
 
@@ -276,9 +281,30 @@ public class GameScreen implements Screen {
             particleEmitter.update(dt);
             particleEmitter.checkPool();
             infoSystem.update(dt);
+        }else if(gameOver)  {
+            stage.act(dt);
+            map.update(dt);
+            for (int i = 0; i < players.size(); i++) {
+                players.get(i).update(dt);
+            }
+            fireworks();
+            particleEmitter.update(dt);
+            particleEmitter.checkPool();
+            infoSystem.update(dt);
         }
     }
 
+    //Анологично взрывам танка, только куча более мелких рандомных взрывов по всей карте.
+    public void fireworks()  {
+        float x = MathUtils.random(10.0f, 1270.0f);
+        float y = MathUtils.random(10.0f, 710.0f);
+        for (int k = 0; k < 25; k++) {
+            v2tmp.set(MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f));
+            v2tmp.nor();
+            v2tmp.scl(MathUtils.random(50f, 120f));
+            particleEmitter.setup(x,y, v2tmp.x, v2tmp.y, 0.4f, 1.0f, 0.4f, 1, 0, 0, 1, 1, 0.6f, 0, 1);
+        }
+    }
     public void checkCollisions() {
         List<Bullet> b = bulletEmitter.getActiveList();
         for (int i = 0; i < b.size(); i++) {
@@ -286,7 +312,7 @@ public class GameScreen implements Screen {
                 if (b.get(i).isArmed() && players.get(j).getHitArea().contains(b.get(i).getPosition())) {
                     b.get(i).deactivate();
 
-                    if (players.get(j).takeDamage(40)) {
+                    if (players.get(j).takeDamage(100)) {
                         destroyPlayer(players.get(j));
                     }
 
@@ -490,6 +516,10 @@ public class GameScreen implements Screen {
         }
         particleEmitter.render(batch);
         infoSystem.render(batch, font24);
+        // Надпись конца игры
+        if(gameOver) {
+            font32.draw(batch, "GAME OVER!", 0, 320, 1280, 1, true);
+        }
         batch.end();
         stage.draw();
     }
