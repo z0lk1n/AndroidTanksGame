@@ -273,6 +273,7 @@ public class GameScreen implements Screen {
         if (!gameOver && !paused) {
             playerJoystick.setVisible(getCurrentTank() instanceof PlayerTank);
             stage.act(dt);
+            pause.setVisible(true);
             map.update(dt);
             for (int i = 0; i < players.size(); i++) {
                 players.get(i).update(dt);
