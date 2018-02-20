@@ -16,6 +16,8 @@ public abstract class Tank {
     protected TextureRegion hudBarHp;
 
     protected Vector2 position;
+    //Добавил вектор скорости для победного прыжка танка
+    protected Vector2 velocity;
     protected Vector2 weaponPosition;
     protected GameScreen game;
     protected float turretAngle;
@@ -64,6 +66,7 @@ public abstract class Tank {
     public Tank(GameScreen game, Vector2 position) {
         this.game = game;
         this.position = position;
+        this.velocity = new Vector2(0, 200.0f);
         this.weaponPosition = new Vector2(position).add(0, 0);
 
         this.textureBase = Assets.getInstance().getAtlas().findRegion("tankBody");
@@ -96,29 +99,37 @@ public abstract class Tank {
         if (game.isMyTurn(this)) {
             t = MathUtils.random(-2f, 2f);
         }
-
-        batch.draw(textureTurret, weaponPosition.x, weaponPosition.y + t, textureTurret.getRegionWidth() / 10, textureTurret.getRegionHeight() / 2, textureTurret.getRegionWidth(), textureTurret.getRegionHeight(), 1, 1, turretAngle);
-        batch.draw(textureTrack, position.x + 4, position.y);
-        batch.draw(textureBase, position.x, position.y + textureTrack.getRegionHeight() / 3 + t);
-
+        //При конце игры танк больше не будет дребезжать.
+        if(!game.isGameOver())   {
+            batch.draw(textureTurret, weaponPosition.x, weaponPosition.y + t, textureTurret.getRegionWidth() / 10, textureTurret.getRegionHeight() / 2, textureTurret.getRegionWidth(), textureTurret.getRegionHeight(), 1, 1, turretAngle);
+            batch.draw(textureTrack, position.x + 4, position.y);
+            batch.draw(textureBase, position.x, position.y + textureTrack.getRegionHeight() / 3 + t);
+        }else   {
+            batch.draw(textureTurret, weaponPosition.x, weaponPosition.y, textureTurret.getRegionWidth() / 10, textureTurret.getRegionHeight() / 2, textureTurret.getRegionWidth(), textureTurret.getRegionHeight(), 1, 1, turretAngle);
+            batch.draw(textureTrack, position.x + 4, position.y);
+            batch.draw(textureBase, position.x, position.y + textureTrack.getRegionHeight() / 3);
+        }
 
         batch.setColor(1, 1, 1, 1);
     }
 
     public void renderHUD(SpriteBatch batch, BitmapFont font) {
-        //batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-        batch.draw(hudBarBack, position.x, position.y + 80, 80, 24);
-        batch.draw(hudBarHp, position.x + 2, position.y + 80, (int) (76 * (float) hp / maxHp), 24);
+        //В конце игры нам не нужны бары
+        if(!game.isGameOver()) {
+            //batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+            batch.draw(hudBarBack, position.x, position.y + 80, 80, 24);
+            batch.draw(hudBarHp, position.x + 2, position.y + 80, (int) (76 * (float) hp / maxHp), 24);
 
-        //batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
-        //batch.draw(hudBarHp, position.x + 2 + MathUtils.random(-reddish * 3, reddish * 3), position.y + 70 + MathUtils.random(-reddish * 3, reddish * 3), (int) (80 * (float) hp / maxHp), 24);
-        //batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-        tmpStrBuilder.setLength(0);
-        tmpStrBuilder.append(hp);
-        font.draw(batch, tmpStrBuilder, position.x, position.y + 100, 85, 1, false);
-        if (power > 100.0f) {
-            batch.draw(hudBarBack, position.x, position.y + 104, 80, 24);
-            batch.draw(hudBarPower, position.x + 2, position.y + 104, (int) (76 * power / maxPower), 24);
+            //batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
+            //batch.draw(hudBarHp, position.x + 2 + MathUtils.random(-reddish * 3, reddish * 3), position.y + 70 + MathUtils.random(-reddish * 3, reddish * 3), (int) (80 * (float) hp / maxHp), 24);
+            //batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+            tmpStrBuilder.setLength(0);
+            tmpStrBuilder.append(hp);
+            font.draw(batch, tmpStrBuilder, position.x, position.y + 100, 85, 1, false);
+            if (power > 100.0f) {
+                batch.draw(hudBarBack, position.x, position.y + 104, 80, 24);
+                batch.draw(hudBarPower, position.x + 2, position.y + 104, (int) (76 * power / maxPower), 24);
+            }
         }
     }
 
@@ -151,6 +162,12 @@ public abstract class Tank {
             reddish -= dt;
         } else {
             reddish = 0.0f;
+        }
+        //Для плавных подпрыгиваний танка
+        if(game.isGameOver())   {
+            if((int)time % 2 == 0)    {
+                position.mulAdd(velocity, dt);
+            }
         }
         this.weaponPosition.set(position).add(34, 45);
         this.hitArea.x = position.x + textureBase.getRegionWidth() / 2;
