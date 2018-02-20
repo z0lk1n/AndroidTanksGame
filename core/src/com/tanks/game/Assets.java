@@ -50,6 +50,7 @@ public class Assets {
                 assetManager.load("explosion.wav", Sound.class);
                 createStandardFont(24);
                 createStandardFont(32);
+                createStandardFont(96);
                 assetManager.finishLoading();
                 atlas = assetManager.get("MainPack.pack", TextureAtlas.class);
                 break;

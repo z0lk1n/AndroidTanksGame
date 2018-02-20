@@ -26,10 +26,12 @@ public class GameScreen implements Screen {
     private List<Tank> players;
     private int currentPlayerIndex;
     private BitmapFont font24;
+    private BitmapFont font96;
 
     private Stage stage;
     private Skin skin;
     private Group playerJoystick;
+    private Group pause;
     private BitmapFont font32;
     private Music music;
     private Sound soundExplosion;
@@ -76,7 +78,7 @@ public class GameScreen implements Screen {
 
     private boolean gameOver;
     private boolean paused;
-    //Что бы из класса танк, знать о завершении игры.
+    //Что бы из класса танк, знать о завершении игры
     public boolean isGameOver() {
         return gameOver;
     }
@@ -105,6 +107,7 @@ public class GameScreen implements Screen {
         stage = new Stage(ScreenManager.getInstance().getViewport(), batch);
         skin = new Skin(Assets.getInstance().getAtlas());
         playerJoystick = new Group();
+        pause = new Group();
         Gdx.input.setInputProcessor(stage);
         TextButton.TextButtonStyle textButtonStyle = new TextButton.TextButtonStyle();
         textButtonStyle.up = skin.getDrawable("btn2");
@@ -138,8 +141,10 @@ public class GameScreen implements Screen {
 
         stage.addActor(btnExit);
         stage.addActor(btnRestart);
-        stage.addActor(btnPause);
 
+        pause.addActor(btnPause);
+
+        stage.addActor(pause);
         stage.addActor(playerJoystick);
 
         btnExit.addListener(new ChangeListener() {
@@ -264,10 +269,9 @@ public class GameScreen implements Screen {
     Vector2 v2tmp = new Vector2(0, 0);
 
     public void update(float dt) {
-        //Если конец игры, то запускаем фейрверк.
+        //Если конец игры, то запускаем фейрверк
         if (!gameOver && !paused) {
             playerJoystick.setVisible(getCurrentTank() instanceof PlayerTank);
-
             stage.act(dt);
             map.update(dt);
             for (int i = 0; i < players.size(); i++) {
@@ -283,10 +287,10 @@ public class GameScreen implements Screen {
             infoSystem.update(dt);
         }else if(gameOver)  {
             stage.act(dt);
-            map.update(dt);
-            for (int i = 0; i < players.size(); i++) {
-                players.get(i).update(dt);
-            }
+            //При gameover нам кнопка паузы не нужна
+            pause.setVisible(false);
+            //map.update(dt);
+            players.get(0).update(dt);
             fireworks();
             particleEmitter.update(dt);
             particleEmitter.checkPool();
@@ -294,7 +298,7 @@ public class GameScreen implements Screen {
         }
     }
 
-    //Анологично взрывам танка, только куча более мелких рандомных взрывов по всей карте.
+    //Анологично взрывам танка, только куча более мелких рандомных взрывов по всей карте
     public void fireworks()  {
         float x = MathUtils.random(10.0f, 1270.0f);
         float y = MathUtils.random(10.0f, 710.0f);
@@ -438,13 +442,14 @@ public class GameScreen implements Screen {
     public void show() {
         font24 = Assets.getInstance().getAssetManager().get("zorque24.ttf", BitmapFont.class);
         font32 = Assets.getInstance().getAssetManager().get("zorque32.ttf", BitmapFont.class);
+        font96 = Assets.getInstance().getAssetManager().get("zorque96.ttf", BitmapFont.class);
         textureBackground = Assets.getInstance().getAtlas().findRegion("background");
         restart();
         createGUI();
         music = Assets.getInstance().getAssetManager().get("MainTheme.wav", Music.class);
         music.setVolume(0.2f);
         music.setLooping(true);
-        // music.play();
+        music.play();
         soundExplosion = Assets.getInstance().getAssetManager().get("explosion.wav", Sound.class);
         InputProcessor ip = new InputProcessor() {
             @Override
@@ -518,7 +523,7 @@ public class GameScreen implements Screen {
         infoSystem.render(batch, font24);
         // Надпись конца игры
         if(gameOver) {
-            font32.draw(batch, "GAME OVER!", 0, 320, 1280, 1, true);
+            font96.draw(batch, "GAME OVER!", 640, 400, 0, 1, true);
         }
         batch.end();
         stage.draw();

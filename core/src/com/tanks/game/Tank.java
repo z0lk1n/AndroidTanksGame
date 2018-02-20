@@ -66,7 +66,7 @@ public abstract class Tank {
     public Tank(GameScreen game, Vector2 position) {
         this.game = game;
         this.position = position;
-        this.velocity = new Vector2(0, 200.0f);
+        this.velocity = new Vector2(0, 150.0f);
         this.weaponPosition = new Vector2(position).add(0, 0);
 
         this.textureBase = Assets.getInstance().getAtlas().findRegion("tankBody");
